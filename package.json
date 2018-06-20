@@ -1,0 +1,25 @@
+{
+  "name": "glamor-to-emotion-codemod",
+  "version": "0.0.1",
+  "description": "A glamor to emotion codemod",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url":
+      "git+https://github.com/vincenzomerolla/glamor-to-emotion-codemod.git"
+  },
+  "author": "Vincenzo Merolla",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vincenzomerolla/glamor-to-emotion-codemod/issues"
+  },
+  "homepage":
+    "https://github.com/vincenzomerolla/glamor-to-emotion-codemod#readme",
+  "devDependencies": {},
+  "dependencies": {
+    "jscodeshift": "^0.5.1"
+  }
+}
