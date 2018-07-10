@@ -1,13 +1,21 @@
 // @flow
 
-import { css } from 'glamor'
+import { css } from 'glamor';
+import cn from 'classnames';
 
 css({
-  color: 'green',
-}).toString()
+  color: 'green'
+}).toString();
 
 const styles = css({
-  color: 'red',
-})
+  color: 'red'
+});
 
-const Div = <div {...styles} />
+const Box = props => <div {...styles} />;
+
+const BoxWithClass = props => <div className="box" {...styles} />;
+
+const AnotherBox = props => {
+  const className = cn('box', greenClass, styles.toString());
+  return <div className={className} />;
+};
