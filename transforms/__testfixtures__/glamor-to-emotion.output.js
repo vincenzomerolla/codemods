@@ -1,20 +1,27 @@
 // @flow
 
-import { cx, css } from 'emotion';
+import * as React from 'react'
+import { css, cx } from 'emotion';
 
-css({
-  color: 'green'
-});
+type Props = {
+  className: string
+}
+
+const greenClass = css({
+  color: 'green',
+})
 
 const styles = css({
-  color: 'red'
-});
+  color: 'red',
+})
 
-const Box = props => <div className={styles} />;
+const Box = (props: Props) => <div className={styles} />
 
-const BoxWithClass = props => <div className={cx('box', styles)} />;
+const BoxWithClass = props => <div className={cx('box', styles)} />
+
+const BoxWithGreenClass = props => <div className={cx(greenClass, styles)} />
 
 const AnotherBox = props => {
-  const className = cx('box', greenClass, styles);
-  return <div className={className} />;
-};
+  const className = cx('box', greenClass, styles)
+  return <div className={className} />
+}
