@@ -4,22 +4,20 @@
   "description": "A glamor to emotion codemod",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "lint": "eslint .",
+    "test": "npx jest",
+    "lint": "npx eslint .",
     "prepublish": "npm run lint && npm test"
   },
   "repository": {
     "type": "git",
-    "url":
-      "git+https://github.com/vincenzomerolla/glamor-to-emotion-codemod.git"
+    "url": "git+https://github.com/vincenzomerolla/glamor-to-emotion-codemod.git"
   },
   "author": "Vincenzo Merolla",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/vincenzomerolla/glamor-to-emotion-codemod/issues"
   },
-  "homepage":
-    "https://github.com/vincenzomerolla/glamor-to-emotion-codemod#readme",
+  "homepage": "https://github.com/vincenzomerolla/glamor-to-emotion-codemod#readme",
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.5",
@@ -31,6 +29,7 @@
     "jest": "^23.1.0"
   },
   "dependencies": {
-    "jscodeshift": "^0.5.1"
+    "jscodeshift": "^0.5.1",
+    "prettier": "^1.13.7"
   }
 }
