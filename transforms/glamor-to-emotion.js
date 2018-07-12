@@ -1,13 +1,15 @@
+import prettier from 'prettier'
 import createUtils from './utils'
 
 export const parser = 'flow'
 
-export default function transformer(file, api, options) {
+export default function transformer(file, api) {
+  const options = prettier.resolveConfig.sync(process.cwd())
   const j = api.jscodeshift
-  const ast = j(file.source)
+  const root = j(file.source)
   const utils = createUtils(j)
 
-  const classnames = ast.find(j.ImportDeclaration, {
+  const classnames = root.find(j.ImportDeclaration, {
     source: {
       type: 'Literal',
       value: 'classnames',
@@ -16,7 +18,7 @@ export default function transformer(file, api, options) {
 
   const classnamesLocalName = classnames.find(j.Identifier).get(0).node.name
 
-  const glamor = ast.find(j.ImportDeclaration, {
+  const glamor = root.find(j.ImportDeclaration, {
     source: {
       type: 'Literal',
       value: 'glamor',
@@ -24,14 +26,15 @@ export default function transformer(file, api, options) {
   })
 
   glamor.forEach(path => {
-    path.node.source.value = 'emotion'
+    path.node.source = j.literal('emotion')
 
     if (classnames.length) {
       path.node.specifiers.push(j.importSpecifier(j.identifier('cx')))
     }
   })
 
-  const cnCalls = ast
+  // classnames =>  cx
+  root
     .find(j.CallExpression, {
       callee: {
         type: 'Identifier',
@@ -39,12 +42,13 @@ export default function transformer(file, api, options) {
       },
     })
     .forEach(path => {
-      path.value.callee.name = 'cx'
+      path.value.callee = j.identifier('cx')
     })
 
   classnames.remove()
 
-  const cssCalls = ast
+  // {...styles} => className={styles}
+  root
     .find(j.CallExpression, {
       callee: {
         type: 'Identifier',
@@ -54,23 +58,66 @@ export default function transformer(file, api, options) {
     .filter(path => path.parent.value.type !== 'MemberExpression')
     .forEach(path => {
       const { name } = path.parent.value.id
-      const spreadAttrs = ast.find(j.JSXSpreadAttribute, {
+      const spreadAttrs = root.find(j.JSXSpreadAttribute, {
         argument: { name },
       })
-
-      const toStringCalls = ast.find(j.MemberExpression, {
-        object: {
-          name,
-          type: 'Identifier',
-        },
+      const toStringCalls = root.find(j.MemberExpression, {
+        object: { name },
+        property: { name: 'toString' },
       })
 
-      const jsxAttribute = utils.createJsxAttribute(
-        'className',
-        j.jsxExpressionContainer(j.identifier(name)),
-      )
+      spreadAttrs.forEach(path => {
+        // check if className is already a declared attr
+        const { attributes } = path.parent.value
 
-      spreadAttrs.forEach(path => j(path).replaceWith(jsxAttribute))
+        const hasClassName = !!attributes.find(attr =>
+          utils.isJsxAttribute(attr, 'className'),
+        )
+
+        const newAttributes = attributes.reduce((acc, attr) => {
+          if (utils.isJsxAttribute(attr, 'className')) {
+            // check if cx() has already been used
+            if (
+              attr.value.type === 'JSXExpressionContainer' &&
+              attr.value.expression.type === 'CallExpression' &&
+              attr.value.expression.callee.name === 'cx'
+            ) {
+              attr.value.expression.arguments.push(j.identifier(name))
+              acc.push(attr)
+            } else {
+              const container = j.jsxExpressionContainer(
+                j.callExpression(j.identifier('cx'), [
+                  attr.value.type === 'JSXExpressionContainer'
+                    ? attr.value.expression
+                    : attr.value,
+                  j.identifier(name),
+                ]),
+              )
+              acc.push(utils.createJsxAttribute('className', container))
+            }
+          } else if (attr === path.value) {
+            // leave the spread style out of the attributes
+          } else {
+            acc.push(attr)
+          }
+
+          return acc
+        }, [])
+
+        if (!hasClassName) {
+          const container = j.jsxExpressionContainer(j.identifier(name))
+          newAttributes.push(utils.createJsxAttribute('className', container))
+        }
+
+        j(path.parent).replaceWith(
+          j.jsxOpeningElement(
+            path.parent.value.name,
+            newAttributes,
+            path.parent.value.selfClosing,
+          ),
+        )
+        // path.parent.value.attributes = newAttributes
+      })
 
       toStringCalls.forEach(path => {
         const identifier = j.identifier(name)
@@ -79,8 +126,9 @@ export default function transformer(file, api, options) {
     })
 
   // @TODO refactor this
-  const cssCallsWithToString = ast
-    .find(j.CallExpression, {
+  // css().toString() =>  css()
+  root
+    .find(j.MemberExpression, {
       object: {
         callee: {
           type: 'Identifier',
@@ -93,10 +141,13 @@ export default function transformer(file, api, options) {
       },
     })
     .forEach(path => {
-      const args = path.value.callee.object.arguments.slice()
-      path.value.callee = j.identifier('css')
-      path.value.arguments = args
+      const expression = j.callExpression(
+        j.identifier('css'),
+        path.value.object.arguments,
+      )
+
+      j(path.parent).replaceWith(expression)
     })
 
-  return ast.toSource({ wrapColumn: 80, quote: 'single' })
+  return prettier.format(root.toSource(), options)
 }
