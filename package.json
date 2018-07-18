@@ -4,8 +4,8 @@
   "description": "A glamor to emotion codemod",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "lint": "eslint .",
+    "test": "npx jest",
+    "lint": "npx eslint .",
     "prepublish": "npm run lint && npm test"
   },
   "repository": {
@@ -19,13 +19,17 @@
   },
   "homepage": "https://github.com/vincenzomerolla/glamor-to-emotion-codemod#readme",
   "devDependencies": {
+    "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.5",
+    "babel-jest": "^23.4.0",
     "babel-preset-env": "^1.7.0",
     "eslint": "^4.19.1",
     "fbjs-scripts": "^0.8.3",
+    "flow-bin": "^0.76.0",
     "jest": "^23.1.0"
   },
   "dependencies": {
-    "jscodeshift": "^0.5.1"
+    "jscodeshift": "^0.5.1",
+    "prettier": "^1.13.7"
   }
 }
