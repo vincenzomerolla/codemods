@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vincenzomerolla/glamor-to-emotion-codemod.git"
+    "url": "git+https://github.com/vincenzomerolla/codemods.git"
   },
   "author": "Vincenzo Merolla",
   "license": "MIT",
