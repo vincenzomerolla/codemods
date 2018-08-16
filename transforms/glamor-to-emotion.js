@@ -9,43 +9,68 @@ export default function transformer(file, api) {
   const root = j(file.source)
   const utils = createUtils(j)
 
-  const classnames = root.find(j.ImportDeclaration, {
-    source: {
-      type: 'Literal',
-      value: 'classnames',
-    },
-  })
-
-  const classnamesLocalName = classnames.find(j.Identifier).get(0).node.name
-
-  const glamor = root.find(j.ImportDeclaration, {
-    source: {
-      type: 'Literal',
-      value: 'glamor',
-    },
-  })
-
-  glamor.forEach(path => {
-    path.node.source = j.literal('emotion')
-
-    if (classnames.length) {
-      path.node.specifiers.push(j.importSpecifier(j.identifier('cx')))
-    }
-  })
-
-  // classnames =>  cx
-  root
-    .find(j.CallExpression, {
-      callee: {
-        type: 'Identifier',
-        name: classnamesLocalName,
+  const cnCollection = root
+    .find(j.ImportDeclaration, {
+      source: {
+        type: 'Literal',
+        value: 'classnames',
       },
     })
-    .forEach(path => {
-      path.value.callee = j.identifier('cx')
-    })
+    .at(0)
 
-  classnames.remove()
+  let emotionDeclaration = null
+
+  if (cnCollection.length) {
+    const cnLocalName = cnCollection.find(j.Identifier).get(0).node.name
+
+    emotionDeclaration = j.importDeclaration(
+      [j.importSpecifier(j.identifier('cx'))],
+      j.literal('emotion'),
+    )
+
+    const firstImport = root
+      .find(j.ImportDeclaration)
+      .at(0)
+      .get()
+
+    j(firstImport).insertAfter(emotionDeclaration)
+
+    // classnames =>  cx
+    root
+      .find(j.CallExpression, {
+        callee: {
+          type: 'Identifier',
+          name: cnLocalName,
+        },
+      })
+      .forEach(path => {
+        path.value.callee = j.identifier('cx')
+      })
+
+    cnCollection.remove()
+  }
+
+  const glamorPath = root
+    .find(j.ImportDeclaration, {
+      source: {
+        type: 'Literal',
+        value: 'glamor',
+      },
+    })
+    .at(0)
+
+  // return source if it doesn't import 'glamor'
+  if (glamorPath.length < 1) return prettier.format(root.toSource(), options)
+
+  if (emotionDeclaration) {
+    emotionDeclaration.specifiers.unshift(
+      j.importSpecifier(j.identifier('css')),
+    )
+    glamorPath.remove()
+  } else {
+    glamorPath.get().node.source = j.literal('emotion')
+    // glamorPath.get().node.specifiers.push(j.importSpecifier(j.identifier('cx')))
+  }
 
   // {...styles} => className={styles}
   root
@@ -83,7 +108,7 @@ export default function transformer(file, api) {
               attr.value.expression.callee.name === 'cx'
             ) {
               attr.value.expression.arguments.push(j.identifier(name))
-              acc.push(attr)
+              acc.unshift(attr)
             } else {
               const container = j.jsxExpressionContainer(
                 j.callExpression(j.identifier('cx'), [
@@ -93,7 +118,7 @@ export default function transformer(file, api) {
                   j.identifier(name),
                 ]),
               )
-              acc.push(utils.createJsxAttribute('className', container))
+              acc.unshift(utils.createJsxAttribute('className', container))
             }
           } else if (attr === path.value) {
             // leave the spread style out of the attributes
