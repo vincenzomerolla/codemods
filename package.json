@@ -1,5 +1,5 @@
 {
-  "name": "glamor-to-emotion-codemod",
+  "name": "codemods",
   "version": "0.0.1",
   "description": "My js codemods",
   "main": "index.js",
