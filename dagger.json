@@ -1,0 +1,8 @@
+{
+  "name": "codemods",
+  "engineVersion": "v0.18.1",
+  "sdk": {
+    "source": "typescript"
+  },
+  "source": ".dagger"
+}

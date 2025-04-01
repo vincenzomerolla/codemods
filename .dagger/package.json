@@ -1,0 +1,12 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@dagger.io/dagger": "./sdk",
+    "date-fns": "^4.1.0",
+    "typescript": "^5.8.2"
+  },
+  "dagger": {
+    "runtime": "node@22.13.0"
+  },
+  "packageManager": "npm@11.2.0"
+}
